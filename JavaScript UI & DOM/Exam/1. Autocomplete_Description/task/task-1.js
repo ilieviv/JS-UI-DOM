@@ -2,66 +2,95 @@
 
 function solve() {
     return function (selector, initialSuggestions) {
+        var root = document.querySelector(selector),
+            addBtn = document.getElementsByClassName('btn-add')[0],
+            input = document.getElementsByClassName('tb-pattern')[0],
+            allSuggestions = initialSuggestions || [],
+            suggestionsList = document.getElementsByClassName('suggestions-list')[0];
 
-        var container = selector;
-        var fragment;
+        function addSuggestionToTheList() {
+            addBtn.addEventListener('click', function () {
+                var text = input.value;
+                var isfound = false;
 
-        var liContainer;
-        var createA;
+                for (var i = 0; i < allSuggestions.length; i += 1) {
+                    if (allSuggestions[i].toLowerCase() === text.toLowerCase()) {
+                        isfound = true;
+                    }
+                }
 
-        var createSuggestion;
-        var allListItems;
+                if (!isfound) {
+                    allSuggestions.push(text);
+                }
 
-        var searchInput = document.getElementsByClassName('tb-pattern');
-
-
-        container = document.querySelector('.suggestions-list');
-        fragment = document.createDocumentFragment();
-
-        if (initialSuggestions) {
-            for (var i = 0; i < initialSuggestions.length; i += 1) {
-                createSuggestion = document.createElement('li');
-                createSuggestion.className = 'suggestion';
-
-                createA = document.createElement('a');
-                createA.href = '#';
-                createA.className = 'suggestion-link';
-                createA.innerHTML = initialSuggestions[i];
-
-                createSuggestion.appendChild(createA);
-                fragment.appendChild(createSuggestion);
-
-            }
+                appendSuggestions();
+            });
         }
-        container.appendChild(fragment);
 
-        searchInput.addEventListener('click', filterListItemsByName);
+        function appendSuggestions() {
+            var li = document.createElement('li');
+            var anchor = document.createElement('a');
+            var filteredSuggestions = [],
+                i;
 
+            anchor.setAttribute('class', 'suggestion-link');
+            anchor.setAttribute('href', '#');
 
-        function filterListItemsByName() {
-            var filter = searchInput.value;
-            var length;
-            var listItemText;
+            for (i = 0; i < allSuggestions.length; i += 1) {
+                var currentSuggestion = allSuggestions[i];
 
-            allListItems = document.getElementsByClassName('suggestion-link');
-            length = allListItems.length;
-
-            for (i = 0; i < length; i += 1) {
-
-                listItemText = allListItems[i].innerHTML;
-
-                if (listItemText.indexOf(filter) < 0) {
-                    allListItems[i].style.display = 'none';
-                } else {
-                    allListItems[i].style.display = '';
+                if (!filteredSuggestions[currentSuggestion.toLowerCase()]) {
+                    filteredSuggestions[currentSuggestion.toLowerCase()] = currentSuggestion;
                 }
             }
 
+            suggestionsList.innerHTML = '';
+            li.setAttribute('class', 'suggestion');
+            li.style.display = 'none';
 
+            for (var key in filteredSuggestions) {
+                var currentLi = li.cloneNode(true);
+                var currentAnchor = anchor.cloneNode(true);
 
+                currentAnchor.innerHTML = filteredSuggestions[key];
+                currentLi.appendChild(currentAnchor);
+                suggestionsList.appendChild(currentLi);
+            }
         }
 
+        function showSuggestions() {
+            input.addEventListener('input', function (event) {
+                var liElements = Array.prototype.slice.call(suggestionsList.childNodes, 0).filter(function (element) {
+                    return element.nodeName !== '#text';
+                });
+                var text = event.target.value;
 
+                for (var i = 0; i < liElements.length; i += 1) {
+                    var currentLi = liElements[i];
+
+                    if (currentLi.firstChild.innerHTML.toLowerCase().indexOf(text.toLowerCase()) === -1 || text === '') {
+                        currentLi.style.display = 'none';
+                    } else if(currentLi.firstChild.innerHTML.toLowerCase().indexOf(text.toLowerCase()) !== -1) {
+                        currentLi.style.display = 'block';
+                    }
+                }
+            });
+        }
+
+        function clickSugegstion() {
+            suggestionsList.addEventListener('click', function (event) {
+                var target = event.target;
+
+                if (target.nodeName === 'LI' || target.nodeName === 'A') {
+                    input.value = target.innerHTML;
+                }
+            });
+        }
+
+        addSuggestionToTheList();
+        appendSuggestions();
+        showSuggestions();
+        clickSugegstion();
     };
 }
 
